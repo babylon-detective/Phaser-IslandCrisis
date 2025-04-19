@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <title>ISLAND CRISIS</title>
+    <style>
+        /* Reset default margins and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Make responsive images */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Base responsive font size */
+        html {
+            font-size: 16px;
+        }
+
+        /* Mobile devices (phones, 600px and down) */
+        @media only screen and (max-width: 600px) {
+            html {
+                font-size: 14px;
+            }
+        }
+
+        /* Tablets (600px and up) */
+        @media only screen and (min-width: 600px) {
+            html {
+                font-size: 15px;
+            }
+        }
+
+        /* Large devices (laptops/desktops, 992px and up) */
+        @media only screen and (min-width: 992px) {
+            html {
+                font-size: 16px;
+            }
+        }
+
+        /* Canvas styling */
+        canvas {
+            display: block;
+            margin: 0 auto;
+            will-read-frequently: true;
+        }
+    </style>
+</head>
+<body>
+    <div id="game"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="format-detection" content="telephone=no">
-    <title>ISLAND CRISIS</title>
+    <title>Island Crisis</title>
     <style>
         /* Reset default margins and padding */
         * {
@@ -54,12 +54,24 @@
             margin: 0 auto;
             will-read-frequently: true;
         }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: black;
+        }
+        #game {
+            width: 100vw;
+            height: 100vh;
+        }
     </style>
 </head>
 <body>
     <div id="game"></div>
-    
+    <!-- Load Phaser first -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <!-- Load game scenes in order -->
+    <script src="titleScene.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

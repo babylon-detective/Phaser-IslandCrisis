@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -25,6 +25,29 @@
         /* Base responsive font size */
         html {
             font-size: 16px;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            position: fixed;
+            touch-action: none;
+        }
+
+        #game {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-origin: center center;
         }
 
         /* Mobile devices (phones, 600px and down) */
@@ -48,30 +71,83 @@
             }
         }
 
-        /* Canvas styling */
-        canvas {
-            display: block;
-            margin: 0 auto;
-            will-read-frequently: true;
+        /* Portrait mode */
+        @media screen and (orientation: portrait) {
+            #game {
+                transform: rotate(90deg) translateY(-100%);
+                transform-origin: top left;
+                width: 100vh;
+                height: 100vw;
+            }
         }
 
-        body {
-            margin: 0;
-            padding: 0;
-            background: black;
+        /* Landscape mode */
+        @media screen and (orientation: landscape) {
+            #game {
+                transform: none;
+                width: 100%;
+                height: 100%;
+            }
         }
-        #game {
-            width: 100vw;
-            height: 100vh;
+
+        /* Touch control zones */
+        .touch-zone {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 10px;
+            touch-action: none;
+            pointer-events: auto;
+            display: none;
+        }
+
+        /* UI text elements */
+        .ui-text {
+            position: absolute;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .distance-text {
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+        }
+
+        .record-text {
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .level-text {
+            top: 1rem;
+            left: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .lives-container {
+            position: absolute;
+            top: 1rem;
+            right: 5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .life-circle {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            border: 2px solid white;
         }
     </style>
 </head>
 <body>
     <div id="game"></div>
-    <!-- Load Phaser first -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
-    <!-- Load game scenes in order -->
-    <script src="titleScene.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="/script.js"></script>
 </body>
 </html>

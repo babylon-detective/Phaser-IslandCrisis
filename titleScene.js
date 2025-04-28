@@ -1,121 +1,134 @@
-class TitleScene extends Phaser.Scene {
+export class TitleScene extends Phaser.Scene {
     constructor() {
         super({ key: 'TitleScene' });
     }
 
     create() {
-        // Create title menu container
-        this.menuContainer = document.createElement('div');
-        this.menuContainer.style.position = 'fixed';
-        this.menuContainer.style.top = '50%';
-        this.menuContainer.style.left = '50%';
-        this.menuContainer.style.transform = 'translate(-50%, -50%)';
-        this.menuContainer.style.display = 'flex';
-        this.menuContainer.style.flexDirection = 'column';
-        this.menuContainer.style.alignItems = 'center';
-        this.menuContainer.style.gap = '20px';
-        this.menuContainer.style.zIndex = '1000';
+        // Get game dimensions
+        const width = this.scale.width;
+        const height = this.scale.height;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isLandscape = width > height;
 
-        // Create title
-        const titleText = document.createElement('div');
-        titleText.textContent = 'ISLAND CRISIS';
-        titleText.style.fontSize = '72px';
-        titleText.style.fontFamily = MENU_FONT;
-        titleText.style.color = '#ffd700';
-        titleText.style.marginBottom = '40px';
-        titleText.style.textShadow = '0 0 10px #ffd700';
-        this.menuContainer.appendChild(titleText);
+        // Create title text
+        const titleText = this.add.text(width / 2, height * 0.3, 'ISLAND CRISIS', {
+            fontSize: Math.min(width * 0.15, 72) + 'px',
+            fontFamily: 'Arial Black',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 6,
+            shadow: {
+                offsetX: 2,
+                offsetY: 2,
+                color: '#000',
+                blur: 2,
+                stroke: true,
+                fill: true
+            }
+        }).setOrigin(0.5);
+
+        // Create menu options
+        const menuOptions = ['START', 'CONTINUE'];
+        const menuItems = [];
+        const menuSpacing = Math.min(height * 0.15, 60);
+        const fontSize = Math.min(width * 0.08, 36);
+
+        menuOptions.forEach((option, index) => {
+            const y = height * 0.5 + (index * menuSpacing);
+            const menuItem = this.add.text(width / 2, y, option, {
+                fontSize: fontSize + 'px',
+                fontFamily: 'Arial Black',
+                color: '#808080',
+                stroke: '#000000',
+                strokeThickness: 4
+            }).setOrigin(0.5);
+
+            menuItems.push(menuItem);
+        });
 
         // Check for saved game
         const savedState = localStorage.getItem('islandCrisisGameState');
-        const hasSavedGame = savedState !== null;
-
-        // Create menu options
-        this.startOption = document.createElement('div');
-        this.startOption.textContent = 'START';
-        this.startOption.style.fontSize = MENU_TEXT_SIZE;
-        this.startOption.style.fontFamily = MENU_FONT;
-        this.startOption.style.cursor = 'pointer';
-
-        this.continueOption = document.createElement('div');
-        this.continueOption.textContent = 'CONTINUE';
-        this.continueOption.style.fontSize = MENU_TEXT_SIZE;
-        this.continueOption.style.fontFamily = MENU_FONT;
-        this.continueOption.style.cursor = hasSavedGame ? 'pointer' : 'default';
-        
-        // Add saved game info if available
-        if (hasSavedGame) {
-            const savedData = JSON.parse(savedState);
-            const saveInfo = document.createElement('div');
-            saveInfo.textContent = `Level ${savedData.currentLevel} - ${Math.floor(savedData.currentDistance)}m`;
-            saveInfo.style.fontSize = '16px';
-            saveInfo.style.color = '#808080';
-            saveInfo.style.marginTop = '-15px';
-            this.continueOption.appendChild(saveInfo);
+        if (!savedState) {
+            menuItems[1].setAlpha(0.5);
         } else {
-            this.continueOption.style.color = '#404040';
+            // Show saved game info
+            const savedData = JSON.parse(savedState);
+            const saveInfo = this.add.text(width / 2, height * 0.7, 
+                `Level ${savedData.currentLevel} - ${Math.floor(savedData.currentDistance)}m`, {
+                fontSize: Math.min(width * 0.05, 24) + 'px',
+                fontFamily: 'Arial',
+                color: '#00ff00',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
         }
 
-        this.menuContainer.appendChild(this.startOption);
-        this.menuContainer.appendChild(this.continueOption);
+        // Menu selection
+        let selectedIndex = 0;
+        const updateSelection = () => {
+            menuItems.forEach((item, index) => {
+                if (index === selectedIndex) {
+                    item.setColor('#ffffff');
+                    item.setScale(1.1);
+                } else {
+                    item.setColor('#808080');
+                    item.setScale(1);
+                }
+            });
+        };
 
-        document.getElementById('game').appendChild(this.menuContainer);
-
-        this.selectedOption = 0;
-        this.hasSavedGame = hasSavedGame;
-        this.updateMenuSelection();
-
-        // Add keyboard controls
+        // Handle keyboard input
         this.input.keyboard.on('keydown-W', () => {
-            this.selectedOption = Math.max(0, this.selectedOption - 1);
-            if (!this.hasSavedGame && this.selectedOption === 1) {
-                this.selectedOption = 0;
-            }
-            this.updateMenuSelection();
+            selectedIndex = Math.max(0, selectedIndex - 1);
+            updateSelection();
         });
 
         this.input.keyboard.on('keydown-S', () => {
-            this.selectedOption = Math.min(1, this.selectedOption + 1);
-            if (!this.hasSavedGame && this.selectedOption === 1) {
-                this.selectedOption = 0;
-            }
-            this.updateMenuSelection();
+            selectedIndex = Math.min(menuItems.length - 1, selectedIndex + 1);
+            updateSelection();
         });
 
         this.input.keyboard.on('keydown-ENTER', () => {
-            this.handleSelection();
+            this.handleSelection(selectedIndex);
         });
-    }
 
-    updateMenuSelection() {
-        this.startOption.style.color = this.selectedOption === 0 ? MENU_SELECTED_COLOR : MENU_UNSELECTED_COLOR;
-        if (this.hasSavedGame) {
-            this.continueOption.style.color = this.selectedOption === 1 ? MENU_SELECTED_COLOR : MENU_UNSELECTED_COLOR;
-        }
-    }
+        // Handle touch input for mobile
+        if (isMobile) {
+            const touchZone = this.add.zone(0, 0, width, height)
+                .setOrigin(0)
+                .setInteractive();
 
-    handleSelection() {
-        // Don't allow continue if no saved game
-        if (this.selectedOption === 1 && !this.hasSavedGame) {
-            return;
+            touchZone.on('pointerdown', (pointer) => {
+                const touchY = pointer.y;
+                const menuStartY = height * 0.5;
+                const touchIndex = Math.floor((touchY - menuStartY) / menuSpacing);
+                
+                if (touchIndex >= 0 && touchIndex < menuItems.length) {
+                    selectedIndex = touchIndex;
+                    updateSelection();
+                    this.handleSelection(selectedIndex);
+                }
+            });
         }
 
-        // Remove menu
-        if (this.menuContainer && this.menuContainer.parentNode) {
-            this.menuContainer.parentNode.removeChild(this.menuContainer);
-        }
+        // Initial selection
+        updateSelection();
 
-        if (this.selectedOption === 0) {
-            // Start new game
-            localStorage.removeItem('islandCrisisGameState'); // Clear any existing save
-            currentLevel = 1;
-            currentLives = MAX_LIVES;
-            currentDistance = 0;
-            recordDistance = 0;
-            this.scene.start('GameScene');
-        } else {
-            // Continue from saved game
-            this.scene.start('GameScene', { loadSave: true });
-        }
+        // Handle selection
+        this.handleSelection = (index) => {
+            if (index === 1 && !savedState) return; // Don't allow continue if no save exists
+            
+            const selectedOption = menuOptions[index];
+            if (selectedOption === 'START') {
+                this.scene.start('GameScene');
+            } else if (selectedOption === 'CONTINUE' && savedState) {
+                this.scene.start('GameScene', { loadSave: true });
+            }
+        };
+
+        // Handle orientation changes
+        this.scale.on('orientationchange', () => {
+            this.scene.restart();
+        });
     }
 } 

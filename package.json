@@ -1,0 +1,30 @@
+{
+  "name": "phaser-islandcrisis",
+  "version": "1.0.0",
+  "main": "controls.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/babylon-detective/Phaser-IslandCrisis.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/babylon-detective/Phaser-IslandCrisis/issues"
+  },
+  "homepage": "https://github.com/babylon-detective/Phaser-IslandCrisis#readme",
+  "description": "",
+  "devDependencies": {
+    "@vitejs/plugin-legacy": "^6.1.1",
+    "vite": "^6.3.3"
+  },
+  "dependencies": {
+    "phaser": "^3.88.2"
+  }
+}

@@ -1,3 +1,7 @@
+import Phaser from 'phaser';
+import { Controls } from './controls.js';
+import { TitleScene } from './titleScene.js';
+
 // Constants for menu
 const MENU_TEXT_SIZE = '48px';
 const MENU_SELECTED_COLOR = '#ffffff';
@@ -83,7 +87,7 @@ let branches;
 let lavaGroup;
 let player;
 let playerGraphics;
-let cursors;
+let controls;
 let isPlayerDead = false;
 let blinkCount = 0;
 
@@ -108,6 +112,7 @@ let dashTimer = null;
 let slideTimer = null;
 let currentSlideSpeed = 0;
 let deathLine;
+let deathLineY;
 
 // Add these functions at the top level
 function saveGameState() {
@@ -189,7 +194,7 @@ class GameScene extends Phaser.Scene {
         player.setSize(PLAYER_WIDTH, PLAYER_HEIGHT);
         player.setBounce(0.1);
         player.setCollideWorldBounds(false);
-        player.setVisible(false);
+        player.setVisible(true);
         
         // Enable collision between player and platforms/branches
         this.physics.add.collider(player, platforms);
@@ -198,14 +203,8 @@ class GameScene extends Phaser.Scene {
         // Create initial checkpoint
         this.updateCheckpoint();
         
-        // Set up keyboard controls
-        cursors = this.input.keyboard.addKeys({
-            up: Phaser.Input.Keyboard.KeyCodes.W,
-            down: Phaser.Input.Keyboard.KeyCodes.S,
-            left: Phaser.Input.Keyboard.KeyCodes.A,
-            right: Phaser.Input.Keyboard.KeyCodes.D,
-            shift: Phaser.Input.Keyboard.KeyCodes.SHIFT
-        });
+        // Initialize controls
+        controls = new Controls(this);
         
         // Set up camera
         this.cameras.main.startFollow(player, true, 0.08, 0.08);
@@ -235,16 +234,19 @@ class GameScene extends Phaser.Scene {
         // Update distance based on player position
         currentDistance = Math.max(0, player.x - 100) / 50;
         
+        // Get input states from controls
+        const input = controls.update();
+        
         // Handle movement
         if (!isDashing && !isSliding) {
-            if (cursors.left.isDown) {
-                if (cursors.shift.isDown && canDash) {
+            if (input.left) {
+                if (input.dash && canDash) {
                     this.startDash(-1);
                 } else {
                     player.setVelocityX(-PLAYER_SPEED);
                 }
-            } else if (cursors.right.isDown) {
-                if (cursors.shift.isDown && canDash) {
+            } else if (input.right) {
+                if (input.dash && canDash) {
                     this.startDash(1);
                 } else {
                     player.setVelocityX(PLAYER_SPEED);
@@ -255,7 +257,7 @@ class GameScene extends Phaser.Scene {
         }
         
         // Handle sliding
-        if (cursors.down.isDown && cursors.shift.isDown && player.body.touching.down && !isSliding) {
+        if (input.down && input.dash && player.body.touching.down && !isSliding) {
             this.startSlide(player.body.velocity.x > 0 ? 1 : -1);
         }
         
@@ -266,12 +268,12 @@ class GameScene extends Phaser.Scene {
         }
         
         // Handle jumping
-        if (cursors.up.isDown && player.body.touching.down && !isSliding) {
+        if (input.up && player.body.touching.down && !isSliding) {
             player.setVelocityY(PLAYER_JUMP_SPEED);
         }
         
         // Handle crouching
-        if (cursors.down.isDown && player.body.touching.down && !isSliding) {
+        if (input.down && player.body.touching.down && !isSliding) {
             if (player.height !== PLAYER_CROUCH_HEIGHT) {
                 player.setSize(PLAYER_WIDTH, PLAYER_CROUCH_HEIGHT, true);
             }
@@ -527,12 +529,12 @@ class GameScene extends Phaser.Scene {
             // Create branch collision body
             const branch = branches.create(branchX, branchY, null);
             branch.setSize(BRANCH_LENGTH, BRANCH_HEIGHT, true); // true to center the body
-            branch.body.setOffset(-BRANCH_LENGTH/2, -BRANCH_HEIGHT/2); // Center the collision body
+            branch.body.setOffset(-BRANCH_LENGTH/2, -BRANCH_HEIGHT/1); // Center the collision body
             branch.refreshBody();
             branch.body.checkCollision.down = false;
             branch.body.checkCollision.left = false;
             branch.body.checkCollision.right = false;
-            branch.visible = false;
+            branch.visible = true;
         }
     }
 
@@ -573,7 +575,7 @@ class GameScene extends Phaser.Scene {
         lavaCollider.setSize(width * 0.9, GROUND_HEIGHT * 0.9);
         lavaCollider.setImmovable(true);
         lavaCollider.body.allowGravity = false;
-        lavaCollider.visible = false;
+        lavaCollider.visible = true;
         
         return {
             group: lavaContainer,
@@ -1240,12 +1242,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: {
-                showBody: true,
-                showStaticBody: true,
-                bodyColor: 0x000000,
-                staticBodyColor: 0x000000
-            }
+            debug: true
         }
     },
     scene: [TitleScene, GameScene],
@@ -1257,7 +1254,18 @@ const config = {
     },
     scale: {
         mode: Phaser.Scale.RESIZE,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        parent: 'game',
+        width: '100%',
+        height: '100%',
+        min: {
+            width: 320,
+            height: 240
+        },
+        max: {
+            width: 1920,
+            height: 1080
+        }
     },
     dom: {
         createContainer: true
@@ -1267,7 +1275,27 @@ const config = {
 // Create game instance
 const game = new Phaser.Game(config);
 
-// Handle window resize
-window.addEventListener('resize', () => {
-    game.scale.resize(window.innerWidth, window.innerHeight);
-});
+// Handle window resize and orientation changes
+let resizeTimeout;
+function handleResize() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const isLandscape = width > height;
+        
+        // Update game size
+        game.scale.resize(width, height);
+        
+        // Update camera if in game scene
+        if (game.scene.isActive('GameScene')) {
+            const scene = game.scene.getScene('GameScene');
+            if (scene.cameras && scene.cameras.main) {
+                scene.cameras.main.setViewport(0, 0, width, height);
+            }
+        }
+    }, 100);
+}
+
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', handleResize);
